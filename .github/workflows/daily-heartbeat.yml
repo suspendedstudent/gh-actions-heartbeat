@@ -1,0 +1,36 @@
+name: Daily Heartbeat Commit
+
+on:
+  # Runs once per day at a specific time (UTC). Use a concrete hour:minute (no wildcards).
+  schedule:
+    - cron: '20 17 * * *'   # 17:20 UTC daily
+  # Allow manual trigger so you can test immediately
+  workflow_dispatch:
+
+permissions:
+  contents: write   # Required to push commits using GITHUB_TOKEN
+
+jobs:
+  heartbeat:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # REQUIRED: Step name contains your email exactly as requested
+      - name: 22f2000998@ds.study.iitm.ac.in — create/update heartbeat
+        run: |
+          # Write a timestamp so there is always something to commit
+          echo "Last run (UTC): $(date -u +'%Y-%m-%dT%H:%M:%SZ')" > .heartbeat.txt
+
+          # Configure git identity for the bot commit
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Stage & commit; the timestamp changes each run so this creates a new commit
+          git add .heartbeat.txt
+          git commit -m "chore: daily heartbeat [skip ci]" || echo "No changes to commit"
+
+      - name: Push commit
+        run: git push
